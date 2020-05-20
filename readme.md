@@ -21,6 +21,12 @@ interface Channel<T> {
 The implementation is mapped to Go's channel semantics as close as possible until the nature of JS advices otherwise.
 
 
+## Development Setup
+```
+yarn install
+```
+See Makefile for other commands.
+
 ## Why?
 My motivation of writing it is not merely an intellectual pursue of reinvention the wheel, considering there are already at least 3 implementations of CSP in JavaScript.
 
