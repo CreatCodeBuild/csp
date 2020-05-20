@@ -2,6 +2,18 @@
 This is a ES module that supports CSP style of concurrency in Browser, Node and Deno. This module has 0 external dependencies.
 
 ## How to Use
+### Browser ES Module & Deno in JavaScript
+```
+import * as CSP from "https://creatcodebuild.github.io/csp/dist/csp.js";
+```
+### Deno in TypeScript
+```
+import * as CSP from "https://creatcodebuild.github.io/csp/src/csp.ts";
+```
+### Node
+I haven't publish a NPM Package for this yet. For now, just copy & paste. There is only 1 file.
+
+### Document
 `Channel` has 3 interfaces
 ```ts
 interface Channel<T> {
