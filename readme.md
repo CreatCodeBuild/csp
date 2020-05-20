@@ -3,11 +3,11 @@ This is a ES module that supports CSP style of concurrency in Browser, Node and 
 
 ## How to Use
 ### Browser ES Module & Deno in JavaScript
-```
+```js
 import * as CSP from "https://creatcodebuild.github.io/csp/dist/csp.js";
 ```
 ### Deno in TypeScript
-```
+```js
 import * as CSP from "https://creatcodebuild.github.io/csp/src/csp.ts";
 ```
 ### Node
