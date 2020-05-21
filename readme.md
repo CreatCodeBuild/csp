@@ -1,6 +1,8 @@
 # Communicating Sequential Process in All of JavaScript
 This is a ES module that supports CSP style of concurrency in Browser, Node and Deno. This module has 0 external dependencies.
 
+The implementation is mapped to Go's channel semantics as close as possible unless the nature of JS advices otherwise.
+
 ## How to Use
 ### Browser ES Module & Deno in JavaScript
 ```js
@@ -13,25 +15,14 @@ import * as CSP from "https://creatcodebuild.github.io/csp/src/csp.ts";
 ### Node
 I haven't publish a NPM Package for this yet. For now, just copy & paste. There is only 1 file.
 
-### Document
-`Channel` has 3 interfaces
-```ts
-interface Channel<T> {
-  async put(T)
-  async pop(): T
-  close()
-}
-```
-`put` sends an element to the channel. It blocks until the other end is ready to receive/pop the element.
+## Document
+The library is at the early stage, all documentations are written in the formal of unit tests with detailed explainations.
 
-`pop` receives element out from the channel. It blocks until the other end is ready to send/put the element.
+See [Doc](./csp_doc.ts)
 
-`put` and `pop` can be used in 2 different async task/promise chain to coordinate.
-
-`close` clsoes the channel. `put` to a closed channel throws an error and `pop` from a closed channel always return `undefined`.
-
-The implementation is mapped to Go's channel semantics as close as possible until the nature of JS advices otherwise.
-
+### 中文用户福利文档
+__目标受众：以前很少有CSP风格的并行编程经验的程序员。__
+*如果您是经验丰富的Go或Clojure开发人员，请阅读下一节。*
 
 ## Development Setup
 ```
