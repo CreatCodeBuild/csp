@@ -1,30 +1,48 @@
-interface PopperOnResolver<T> {
-    (ele: { value: undefined, done: true } | { value: T, done: false }): void
-}
-
-export interface PopChannel<T> {
-    pop(): Promise<T | undefined>
+// 2 base methods that all kinds of channels have to implement.
+interface base {
+    // Close this channel. This method does not block and returns immediately.
+    // One might argue that if a IO like object implement this interface,
+    // its close behavior might need to block.
+    // If this situation is indeed encounterred. Please raise an issue on GitHub and let's discuss it.
     close()
+    // Check if this channel is closed.
     closed(): boolean
 }
 
-export interface PutChannl<T> {
-    put(ele: T): Promise<void>
-    close()
-    closed(): boolean 
+// One can only receive data from a PopChannel.
+export interface PopChannel<T> extends base {
+    // Receive data from this channel.
+    pop(): Promise<T | undefined>
 }
 
-export interface Channel<T> extends PopChannel<T>, PutChannl<T> {}
+// One can only send data to a PutChannel.
+export interface PutChannel<T> extends base  {
+    // Send data to this channel.
+    put(ele: T): Promise<void>
+}
 
+// Normally a channel can both pop/receive and be put/send data.
+// The documentation will use pop/receive and put/send interchangeably.
+export interface Channel<T> extends PopChannel<T>, PutChannel<T> {}
+
+// A SelectableChannel implements ready() method that will be used by select() function.
+// The signature of this method is subject to change.
 export interface SelectableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>
 }
 
+// An iteratble channel can be used in "for await (let element of channel)" loop 
 export interface IterableChannel<T> extends PopChannel<T> {
     [Symbol.asyncIterator]: AsyncIterator<T, T>
 }
 
-export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannl<T> {
+interface PopperOnResolver<T> {
+    (ele: { value: undefined, done: true } | { value: T, done: false }): void
+}
+
+// An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
+// Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
+export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
     private _closed: boolean = false;
     private popActions: PopperOnResolver<T>[] = [];
     putActions: Array<{ resolver: Function, ele: T }> = [];
@@ -136,6 +154,7 @@ export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannl<T>
     }
 }
 
+// A shorter name for UnbufferredChannel.
 export function chan<T>() {
     return new UnbufferredChannel<T>();
 }
@@ -148,6 +167,8 @@ interface DefaultCase<T> {
     (): Promise<T>
 }
 
+// select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
+// and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
 export async function select<T>(channels: [UnbufferredChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
     let promises: Promise<number>[] = channels.map(([c, func], i) => {
@@ -164,6 +185,7 @@ export async function select<T>(channels: [UnbufferredChannel<T>, onSelect<T>][]
     return await channels[i][1](ele);
 }
 
+// A promised setTimeout.
 export function sleep(ms: number) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms)
