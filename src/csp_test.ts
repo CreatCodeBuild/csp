@@ -322,9 +322,12 @@ describe('select', async () => {
         equal(3, await select(
             [
                 [lastChan(c), async function (ele) { return ele }],
-                [after(0), async ele => ele ]
+                [after(0), async ele => ele]
             ]
         ))
+        equal(0, c.popActions.length)
+        equal(0, c.putActions.length)
+        equal(0, c.readyListener.length)    // todo: should be 0
     })
     it('lastChan is popped if paired with default', async () => {
         let c = chan();

@@ -44,7 +44,7 @@ interface PopperOnResolver<T> {
 // Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
 export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
     private _closed: boolean = false;
-    private popActions: PopperOnResolver<T>[] = [];
+    popActions: PopperOnResolver<T>[] = [];
     putActions: Array<{ resolver: Function, ele: T }> = [];
     readyListener: { resolve: Function, i: number }[] = [];
 
