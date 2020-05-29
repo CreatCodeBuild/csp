@@ -16,9 +16,18 @@ export interface SelectableChannel<T> extends PopChannel<T> {
 export interface IterableChannel<T> extends PopChannel<T> {
     [Symbol.asyncIterator]: AsyncIterator<T, T>;
 }
+interface PopperOnResolver<T> {
+    (ele: {
+        value: undefined;
+        done: true;
+    } | {
+        value: T;
+        done: false;
+    }): void;
+}
 export declare class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
     private _closed;
-    private popActions;
+    popActions: PopperOnResolver<T>[];
     putActions: Array<{
         resolver: Function;
         ele: T;
@@ -54,6 +63,6 @@ interface DefaultCase<T> {
 export declare function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
 export declare function last<T>(channel: SelectableChannel<T>): Promise<T | undefined>;
 export declare function lastChan<T>(channel: SelectableChannel<T>): SelectableChannel<T>;
-export declare function after(ms: number): SelectableChannel<undefined>;
+export declare function after(ms: number): SelectableChannel<string>;
 export declare function sleep(ms: number): Promise<unknown>;
 export {};

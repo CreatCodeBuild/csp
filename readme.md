@@ -1,5 +1,5 @@
 # Communicating Sequential Process in All of JavaScript
-This is a ES module that supports CSP style of concurrency in Browser, Node and Deno. This module has 0 external dependencies.
+This is an ES module that supports CSP style of concurrency in Browser, Node and Deno. This module has 0 external dependencies.
 
 The implementation is mapped to Go's channel semantics as close as possible unless the nature of JS advices otherwise.
 

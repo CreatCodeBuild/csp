@@ -57,7 +57,6 @@ export class UnbufferredChannel {
         if (this._closed) {
             return { value: undefined, done: true };
         }
-        // console.log('poppers', this.putActions, this.popActions);
         if (this.putActions.length === 0) {
             return new Promise((resolve, reject) => {
                 this.popActions.push(resolve);
@@ -152,18 +151,25 @@ export function lastChan(channel) {
     f();
     return c;
 }
+const MAX_INT_32 = Math.pow(2, 32) / 2 - 1;
 export function after(ms) {
+    if (0 > ms || ms > MAX_INT_32) {
+        throw new Error(`${ms} is out of signed int32 bound or is negative`);
+    }
     let c = new UnbufferredChannel();
     async function f() {
         await sleep(ms);
-        await c.put(undefined);
+        await c.put("xxx");
     }
     f();
     return c;
 }
 // A promised setTimeout.
 export function sleep(ms) {
-    return new Promise((resolve) => {
+    if (0 > ms || ms > MAX_INT_32) {
+        throw Error(`${ms} is out of signed int32 bound or is negative`);
+    }
+    return new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
     });
 }
