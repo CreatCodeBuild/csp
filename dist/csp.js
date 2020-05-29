@@ -125,32 +125,6 @@ export async function select(channels, defaultCase) {
     let ele = await channels[i][0].pop();
     return await channels[i][1](ele);
 }
-// Return the last element put to the channel at the moment.
-export async function last(channel) {
-    let current = await channel.pop();
-    let _break = false;
-    while (!_break) {
-        await select([
-            [channel, async (ele) => {
-                    current = ele;
-                }]
-        ], async () => {
-            _break = true;
-            return undefined;
-        });
-    }
-    return current;
-}
-// Wrap the channel with a new channel that only pops the last element of the given channel at the moment.
-export function lastChan(channel) {
-    let c = new UnbufferredChannel();
-    async function f() {
-        let ele = await last(channel);
-        await c.put(ele);
-    }
-    f();
-    return c;
-}
 const MAX_INT_32 = Math.pow(2, 32) / 2 - 1;
 export function after(ms) {
     if (0 > ms || ms > MAX_INT_32) {

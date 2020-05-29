@@ -61,8 +61,6 @@ interface DefaultCase<T> {
     (): Promise<T>;
 }
 export declare function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
-export declare function last<T>(channel: SelectableChannel<T>): Promise<T | undefined>;
-export declare function lastChan<T>(channel: SelectableChannel<T>): SelectableChannel<T>;
 export declare function after(ms: number): SelectableChannel<number>;
 export declare function sleep(ms: number): Promise<unknown>;
 export {};

@@ -1,4 +1,4 @@
-import { chan, select, sleep, last, lastChan, after } from './csp'
+import { chan, select, sleep, after } from './csp'
 import { deepStrictEqual, equal } from 'assert';
 
 
@@ -161,27 +161,5 @@ describe("Channel", async () => {
         await t1;
         let r = await t2;
         deepStrictEqual(r, [1, 2])
-    })
-
-    it("can get the last element put to the channel", async () => {
-        let c = chan();
-        (async () => {
-            await sleep(100);
-            c.put(1);
-            c.put(2);
-            c.put(3);
-        })();
-        equal(3, await last(c))
-    })
-
-    it("can get the last element put to the channel as a channel", async () => {
-        let c = chan();
-        (async () => {
-            await sleep(100);
-            c.put(1);
-            c.put(2);
-            c.put(3);
-        })();
-        equal(3, await lastChan(c).pop())
     })
 });

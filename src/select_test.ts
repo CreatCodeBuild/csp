@@ -1,5 +1,5 @@
 
-import { chan, select, sleep, last, lastChan, after } from './csp'
+import { chan, select, sleep, after } from './csp'
 import { deepStrictEqual, equal, throws } from 'assert';
 
 
@@ -129,40 +129,6 @@ describe('select', async () => {
                 return 'default'
             }
         ), 'something')
-    })
-
-    it('lastChan is popped if paired with after(0)', async () => {
-        let c = chan();
-        (async () => {
-            await c.put(1);
-            await c.put(2);
-            await c.put(3);
-        })();
-        equal(3, await select(
-            [
-                [lastChan(c), async function (ele) { return ele }],
-                [after(0), async ele => ele]
-            ]
-        ))
-        equal(0, c.popActions.length)
-        equal(0, c.putActions.length)
-        equal(0, c.readyListener.length)    // todo: should be 0
-    })
-    it('lastChan is popped if paired with default', async () => {
-        let c = chan();
-        (async () => {
-            await c.put(1);
-            await c.put(2);
-            await c.put(3);
-        })();
-        equal('default', await select(
-            [
-                [lastChan(c), async function (ele) { return ele }],
-            ],
-            async function () {
-                return 'default'
-            }
-        ))
     })
 
     it('after', async () => {
