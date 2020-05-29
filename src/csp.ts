@@ -217,14 +217,14 @@ export function lastChan<T>(channel: SelectableChannel<T>): SelectableChannel<T>
 
 const MAX_INT_32 = Math.pow(2, 32) / 2 - 1;
 
-export function after(ms: number): SelectableChannel<string> {
+export function after(ms: number): SelectableChannel<number> {
     if (0 > ms || ms > MAX_INT_32) {
         throw new Error(`${ms} is out of signed int32 bound or is negative`)
     }
-    let c = new UnbufferredChannel<string>();
+    let c = new UnbufferredChannel<number>();
     async function f() {
         await sleep(ms);
-        await c.put("xxx");
+        await c.put(ms);    // todo: should it close or put?
     }
     f();
     return c;

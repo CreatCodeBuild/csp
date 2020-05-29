@@ -159,7 +159,7 @@ export function after(ms) {
     let c = new UnbufferredChannel();
     async function f() {
         await sleep(ms);
-        await c.put("xxx");
+        await c.put(ms); // todo: should it close or put?
     }
     f();
     return c;
