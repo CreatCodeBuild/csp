@@ -1,14 +1,14 @@
-export interface PopChannel<T> {
+interface base {
+    close(): any;
+    closed(): boolean;
+}
+export interface PopChannel<T> extends base {
     pop(): Promise<T | undefined>;
-    close(): any;
-    closed(): boolean;
 }
-export interface PutChannl<T> {
+export interface PutChannel<T> extends base {
     put(ele: T): Promise<void>;
-    close(): any;
-    closed(): boolean;
 }
-export interface Channel<T> extends PopChannel<T>, PutChannl<T> {
+export interface Channel<T> extends PopChannel<T>, PutChannel<T> {
 }
 export interface SelectableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>;
@@ -16,7 +16,7 @@ export interface SelectableChannel<T> extends PopChannel<T> {
 export interface IterableChannel<T> extends PopChannel<T> {
     [Symbol.asyncIterator]: AsyncIterator<T, T>;
 }
-export declare class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannl<T> {
+export declare class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
     private _closed;
     private popActions;
     putActions: Array<{
@@ -51,6 +51,7 @@ interface onSelect<T> {
 interface DefaultCase<T> {
     (): Promise<T>;
 }
-export declare function select<T>(channels: [UnbufferredChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
+export declare function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
+export declare function last<T>(channel: SelectableChannel<T>): Promise<T | undefined>;
 export declare function sleep(ms: number): Promise<unknown>;
 export {};

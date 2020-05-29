@@ -1,3 +1,5 @@
+// An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
+// Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
 export class UnbufferredChannel {
     constructor() {
         this._closed = false;
@@ -103,9 +105,12 @@ export class UnbufferredChannel {
         return this;
     }
 }
+// A shorter name for UnbufferredChannel.
 export function chan() {
     return new UnbufferredChannel();
 }
+// select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
+// and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
 export async function select(channels, defaultCase) {
     let promises = channels.map(([c, func], i) => {
@@ -121,6 +126,22 @@ export async function select(channels, defaultCase) {
     let ele = await channels[i][0].pop();
     return await channels[i][1](ele);
 }
+export async function last(channel) {
+    let current = await channel.pop();
+    let _break = false;
+    while (!_break) {
+        await select([
+            [channel, async (ele) => {
+                    current = ele;
+                }]
+        ], async () => {
+            _break = true;
+            return undefined;
+        });
+    }
+    return current;
+}
+// A promised setTimeout.
 export function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
