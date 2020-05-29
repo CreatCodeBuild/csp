@@ -204,6 +204,16 @@ export async function last<T>(channel: SelectableChannel<T>) {
     return current;
 }
 
+export function lastChan<T>(channel: SelectableChannel<T>): SelectableChannel<T> {
+    let c = new UnbufferredChannel<T | undefined>();
+    async function f() {
+        let ele = await last(channel);
+        await c.put(ele);
+    }
+    f();
+    return c;
+}
+
 // A promised setTimeout.
 export function sleep(ms: number) {
     return new Promise((resolve) => {

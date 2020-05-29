@@ -141,6 +141,15 @@ export async function last(channel) {
     }
     return current;
 }
+export function lastChan(channel) {
+    let c = new UnbufferredChannel();
+    async function f() {
+        let ele = await last(channel);
+        await c.put(ele);
+    }
+    f();
+    return c;
+}
 // A promised setTimeout.
 export function sleep(ms) {
     return new Promise((resolve) => {
