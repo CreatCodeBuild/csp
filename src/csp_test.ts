@@ -1,4 +1,4 @@
-import { chan, select, sleep, last, lastChan } from './csp'
+import { chan, select, sleep, last, lastChan, after } from './csp'
 import { deepStrictEqual, equal } from 'assert';
 
 
@@ -213,7 +213,7 @@ describe('select', async () => {
         let unblock = chan<null>();
         setTimeout(async () => {
             unblock.close()
-        }, 1000);
+        }, 100);
         let x = await select([
             [unblock, async function (ele) { return ele }],
         ])
@@ -223,7 +223,7 @@ describe('select', async () => {
         let unblock = chan<string>();
         setTimeout(async () => {
             unblock.put('put 1 sec later')
-        }, 1000);
+        }, 100);
         let x = await select([
             [unblock, async function (ele) { return ele }],
         ])
@@ -235,7 +235,7 @@ describe('select', async () => {
         unblock.close()
         let sec1 = chan<string>();
         let t1 = async () => {
-            await sleep(1000)
+            await sleep(100)
             await sec1.put('sec1');
         }
         t1();
@@ -310,5 +310,36 @@ describe('select', async () => {
                 return 'default'
             }
         ), 'something')
+    })
+
+    it('lastChan is popped if paired with after(0)', async () => {
+        let c = chan();
+        (async () => {
+            await c.put(1);
+            await c.put(2);
+            await c.put(3);
+        })();
+        equal(3, await select(
+            [
+                [lastChan(c), async function (ele) { return ele }],
+                [after(0), async ele => ele ]
+            ]
+        ))
+    })
+    it('lastChan is popped if paired with default', async () => {
+        let c = chan();
+        (async () => {
+            await c.put(1);
+            await c.put(2);
+            await c.put(3);
+        })();
+        equal('default', await select(
+            [
+                [lastChan(c), async function (ele) { return ele }],
+            ],
+            async function () {
+                return 'default'
+            }
+        ))
     })
 });

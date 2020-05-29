@@ -185,6 +185,7 @@ export async function select<T>(channels: [SelectableChannel<T>, onSelect<T>][],
     return await channels[i][1](ele);
 }
 
+// Return the last element put to the channel at the moment.
 export async function last<T>(channel: SelectableChannel<T>) {
     let current: T | undefined = await channel.pop();
     let _break = false;
@@ -204,11 +205,22 @@ export async function last<T>(channel: SelectableChannel<T>) {
     return current;
 }
 
+// Wrap the channel with a new channel that only pops the last element of the given channel at the moment.
 export function lastChan<T>(channel: SelectableChannel<T>): SelectableChannel<T> {
     let c = new UnbufferredChannel<T | undefined>();
     async function f() {
         let ele = await last(channel);
         await c.put(ele);
+    }
+    f();
+    return c;
+}
+
+export function after(ms: number): SelectableChannel<undefined> {
+    let c = new UnbufferredChannel<undefined>();
+    async function f() {
+        await sleep(ms);
+        await c.put(undefined);
     }
     f();
     return c;
