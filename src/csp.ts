@@ -16,14 +16,14 @@ export interface PopChannel<T> extends base {
 }
 
 // One can only send data to a PutChannel.
-export interface PutChannel<T> extends base  {
+export interface PutChannel<T> extends base {
     // Send data to this channel.
     put(ele: T): Promise<void>
 }
 
 // Normally a channel can both pop/receive and be put/send data.
 // The documentation will use pop/receive and put/send interchangeably.
-export interface Channel<T> extends PopChannel<T>, PutChannel<T> {}
+export interface Channel<T> extends PopChannel<T>, PutChannel<T> { }
 
 // A SelectableChannel implements ready() method that will be used by select() function.
 // The signature of this method is subject to change.
@@ -170,7 +170,7 @@ interface DefaultCase<T> {
 // select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
-export async function select<T>(channels: [UnbufferredChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
+export async function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
     let promises: Promise<number>[] = channels.map(([c, func], i) => {
         return c.ready(i);
     })
@@ -183,6 +183,25 @@ export async function select<T>(channels: [UnbufferredChannel<T>, onSelect<T>][]
     }
     let ele = await channels[i][0].pop();
     return await channels[i][1](ele);
+}
+
+export async function last<T>(channel: SelectableChannel<T>) {
+    let current: T | undefined = await channel.pop();
+    let _break = false;
+    while (!_break) {
+        await select(
+            [
+                [channel, async (ele) => {
+                    current = ele;
+                }]
+            ],
+            async () => {
+                _break = true;
+                return undefined;
+            }
+        )
+    }
+    return current;
 }
 
 // A promised setTimeout.

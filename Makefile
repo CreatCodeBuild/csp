@@ -13,3 +13,6 @@ compile:
 	rm -rf dist
 	# $$(yarn bin)/tsc							# Node Distribution
 	$$(yarn bin)/tsc --module es6 --outDir dist	# Deno Distribution
+
+git:
+	git config --global user.email $(email)
