@@ -4,7 +4,7 @@ interface base {
     // One might argue that if a IO like object implement this interface,
     // its close behavior might need to block.
     // If this situation is indeed encounterred. Please raise an issue on GitHub and let's discuss it.
-    close()
+    close(): void
     // Check if this channel is closed.
     closed(): boolean
 }
