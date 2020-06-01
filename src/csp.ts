@@ -27,9 +27,11 @@ export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> { }
 
 // A SelectableChannel implements ready() method that will be used by select() function.
 // The signature of this method is subject to change.
-export interface Channel<T> extends PopChannel<T> {
+export interface SeletableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>
 }
+
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> { }
 
 // An iteratble channel can be used in "for await (let element of channel)" loop 
 export interface IterableChannel<T> extends PopChannel<T> {
@@ -158,8 +160,8 @@ export function chan<T>() {
     return new UnbufferredChannel<T>();
 }
 
-interface onSelect<T> {
-    (ele: T | undefined): Promise<any>
+interface onSelect<T, R> {
+    (ele: T | undefined): Promise<R>
 }
 
 interface DefaultCase<T> {
@@ -169,7 +171,7 @@ interface DefaultCase<T> {
 // select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
-export async function select<T>(channels: [Channel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
+export async function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2> {
     let promises: Promise<number>[] = channels.map(([c, func], i) => {
         return c.ready(i);
     })

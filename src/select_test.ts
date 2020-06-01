@@ -59,8 +59,8 @@ describe('select', async () => {
             [unblock, async function () {
                 return 'unblock'
             }],
-            [sec1, async function () {
-                return true
+            [sec1, async function (ele) {
+                return ele
             }]
         ]))
         equal('sec1', await sec1.pop())

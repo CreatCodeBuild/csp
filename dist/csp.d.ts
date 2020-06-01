@@ -10,8 +10,10 @@ export interface PutChannel<T> extends base {
 }
 export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> {
 }
-export interface Channel<T> extends PopChannel<T> {
+export interface SeletableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>;
+}
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> {
 }
 export interface IterableChannel<T> extends PopChannel<T> {
     [Symbol.asyncIterator]: AsyncIterator<T, T>;
@@ -54,13 +56,13 @@ export declare class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> 
     [Symbol.asyncIterator](): this;
 }
 export declare function chan<T>(): UnbufferredChannel<T>;
-interface onSelect<T> {
-    (ele: T | undefined): Promise<any>;
+interface onSelect<T, R> {
+    (ele: T | undefined): Promise<R>;
 }
 interface DefaultCase<T> {
     (): Promise<T>;
 }
-export declare function select<T>(channels: [Channel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
+export declare function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2>;
 export declare function after(ms: number): Channel<number>;
 export declare function sleep(ms: number): Promise<unknown>;
 export {};
