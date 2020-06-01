@@ -13,10 +13,10 @@ export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> {
 export interface SeletableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>;
 }
-export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> {
-}
 export interface IterableChannel<T> extends PopChannel<T> {
-    [Symbol.asyncIterator]: AsyncIterator<T, T>;
+    [Symbol.asyncIterator]: AsyncIterator<T>;
+}
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T>, IterableChannel<T> {
 }
 interface PopperOnResolver<T> {
     (ele: {
@@ -27,7 +27,7 @@ interface PopperOnResolver<T> {
         done: false;
     }): void;
 }
-export declare class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
+export declare class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIterableIterator<T> {
     private _closed;
     popActions: PopperOnResolver<T>[];
     putActions: Array<{
@@ -47,10 +47,7 @@ export declare class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> 
     } | {
         value: undefined;
         done: true;
-    }> | {
-        value: undefined;
-        done: true;
-    };
+    }>;
     close(): Promise<void>;
     closed(): boolean;
     [Symbol.asyncIterator](): this;

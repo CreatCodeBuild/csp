@@ -31,12 +31,12 @@ export interface SeletableChannel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>
 }
 
-export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> { }
-
 // An iteratble channel can be used in "for await (let element of channel)" loop 
 export interface IterableChannel<T> extends PopChannel<T> {
-    [Symbol.asyncIterator]: AsyncIterator<T, T>
+    [Symbol.asyncIterator]: AsyncIterator<T>
 }
+
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T>, IterableChannel<T> { }
 
 interface PopperOnResolver<T> {
     (ele: { value: undefined, done: true } | { value: T, done: false }): void
@@ -44,7 +44,7 @@ interface PopperOnResolver<T> {
 
 // An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
 // Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
-export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
+export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIterableIterator<T> {
     private _closed: boolean = false;
     popActions: PopperOnResolver<T>[] = [];
     putActions: Array<{ resolver: Function, ele: T }> = [];
@@ -93,16 +93,13 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
     }
 
     async pop(): Promise<T | undefined> {
-        let next = this.next();
-        if (next instanceof Promise) {
-            return (await next).value;
-        }
+        let next = await this.next();
         return next.value;
     }
 
-    next(): Promise<{ value: T, done: false } | { value: undefined, done: true }> | { value: undefined, done: true } {
+    next(): Promise<{ value: T, done: false } | { value: undefined, done: true }> {
         if (this._closed) {
-            return { value: undefined, done: true };
+            return Promise.resolve({ value: undefined, done: true });
         }
 
         if (this.putActions.length === 0) {
@@ -150,6 +147,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
         return this._closed;
     }
 
+    // @ts-ignore
     [Symbol.asyncIterator]() {
         return this;
     }
@@ -198,6 +196,7 @@ export function after(ms: number): Channel<number> {
         await c.put(ms);    // todo: should it close or put?
     }
     f();
+    // @ts-ignore
     return c;
 }
 

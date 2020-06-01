@@ -47,15 +47,12 @@ export class UnbufferredChannel {
         }
     }
     async pop() {
-        let next = this.next();
-        if (next instanceof Promise) {
-            return (await next).value;
-        }
+        let next = await this.next();
         return next.value;
     }
     next() {
         if (this._closed) {
-            return { value: undefined, done: true };
+            return Promise.resolve({ value: undefined, done: true });
         }
         if (this.putActions.length === 0) {
             return new Promise((resolve, reject) => {
@@ -100,6 +97,7 @@ export class UnbufferredChannel {
     closed() {
         return this._closed;
     }
+    // @ts-ignore
     [Symbol.asyncIterator]() {
         return this;
     }
@@ -136,6 +134,7 @@ export function after(ms) {
         await c.put(ms); // todo: should it close or put?
     }
     f();
+    // @ts-ignore
     return c;
 }
 // A promised setTimeout.
