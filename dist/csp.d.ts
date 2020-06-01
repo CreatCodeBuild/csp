@@ -1,5 +1,5 @@
 interface base {
-    close(): any;
+    close(): void;
     closed(): boolean;
 }
 export interface PopChannel<T> extends base {
