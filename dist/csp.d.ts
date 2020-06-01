@@ -8,9 +8,9 @@ export interface PopChannel<T> extends base {
 export interface PutChannel<T> extends base {
     put(ele: T): Promise<void>;
 }
-export interface Channel<T> extends PopChannel<T>, PutChannel<T> {
+export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> {
 }
-export interface SelectableChannel<T> extends PopChannel<T> {
+export interface Channel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>;
 }
 export interface IterableChannel<T> extends PopChannel<T> {
@@ -25,7 +25,7 @@ interface PopperOnResolver<T> {
         done: false;
     }): void;
 }
-export declare class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
+export declare class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
     private _closed;
     popActions: PopperOnResolver<T>[];
     putActions: Array<{
@@ -60,7 +60,7 @@ interface onSelect<T> {
 interface DefaultCase<T> {
     (): Promise<T>;
 }
-export declare function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
-export declare function after(ms: number): SelectableChannel<number>;
+export declare function select<T>(channels: [Channel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any>;
+export declare function after(ms: number): Channel<number>;
 export declare function sleep(ms: number): Promise<unknown>;
 export {};

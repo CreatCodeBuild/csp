@@ -23,11 +23,11 @@ export interface PutChannel<T> extends base {
 
 // Normally a channel can both pop/receive and be put/send data.
 // The documentation will use pop/receive and put/send interchangeably.
-export interface Channel<T> extends PopChannel<T>, PutChannel<T> { }
+export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> { }
 
 // A SelectableChannel implements ready() method that will be used by select() function.
 // The signature of this method is subject to change.
-export interface SelectableChannel<T> extends PopChannel<T> {
+export interface Channel<T> extends PopChannel<T> {
     ready(i: number): Promise<number>
 }
 
@@ -42,7 +42,7 @@ interface PopperOnResolver<T> {
 
 // An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
 // Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
-export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T> {
+export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T> {
     private _closed: boolean = false;
     popActions: PopperOnResolver<T>[] = [];
     putActions: Array<{ resolver: Function, ele: T }> = [];
@@ -169,7 +169,7 @@ interface DefaultCase<T> {
 // select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
-export async function select<T>(channels: [SelectableChannel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
+export async function select<T>(channels: [Channel<T>, onSelect<T>][], defaultCase?: DefaultCase<T>): Promise<any> {
     let promises: Promise<number>[] = channels.map(([c, func], i) => {
         return c.ready(i);
     })
@@ -186,7 +186,7 @@ export async function select<T>(channels: [SelectableChannel<T>, onSelect<T>][],
 
 const MAX_INT_32 = Math.pow(2, 32) / 2 - 1;
 
-export function after(ms: number): SelectableChannel<number> {
+export function after(ms: number): Channel<number> {
     if (0 > ms || ms > MAX_INT_32) {
         throw new Error(`${ms} is out of signed int32 bound or is negative`)
     }
