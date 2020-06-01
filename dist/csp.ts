@@ -123,7 +123,7 @@ export class UnbufferredChannel<T> implements SelectableChannel<T>, PutChannel<T
     // put to a closed channel throws an error
     // pop from a closed channel returns undefined
     // close a closed channel throws an error
-    async close() {
+    async close(): Promise<void> {
         if (this._closed) {
             throw Error('can not close a channel twice');
         }
