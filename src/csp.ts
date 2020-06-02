@@ -248,7 +248,7 @@ class Multicaster<T> {
     }
 
     copy(): Channel<T> {
-        let c = new UnbufferredChannel<T>();
+        let c = new UnbufferredChannel<T | undefined>();
         this.listeners.push(c);
         // @ts-ignore
         return c;

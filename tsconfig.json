@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "CommonJS",
         "target": "es2018",
-        "strictNullChecks": true,
+        "strict": true,
         "declaration": true,
         "outDir": "dist/commonjs",
         "rootDir": "src"
