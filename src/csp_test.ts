@@ -1,5 +1,5 @@
-import { chan, select, sleep, after } from './csp'
-import { deepStrictEqual, equal } from 'assert';
+import { chan, select, sleep, after, UnreachableError } from './csp'
+import { deepStrictEqual, equal, throws } from 'assert';
 
 
 describe("Channel", async () => {
@@ -162,4 +162,19 @@ describe("Channel", async () => {
         let r = await t2;
         deepStrictEqual(r, [1, 2])
     })
+
+    xit('close while having pending put actions', async () => {
+        let c = chan();
+        let put = c.put(1);
+        await c.close();
+        // await put;
+        // try {
+        throws(async () => {
+            await put;
+        }, 'A closed channel can never be put');
+
+        // } catch (err) {
+        //     console.log(err);   // the stack trace isn't right
+        // }
+    });
 });

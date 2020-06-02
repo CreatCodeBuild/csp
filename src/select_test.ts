@@ -3,7 +3,7 @@ import { chan, select, sleep, after } from './csp'
 import { deepStrictEqual, equal, throws } from 'assert';
 
 
-describe('select', async () => {
+describe('select on read/receive/pop operation', async () => {
     it("works", async () => {
         let sec1 = chan<string>();
         sec1.put('put after unblock');

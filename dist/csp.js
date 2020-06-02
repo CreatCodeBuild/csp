@@ -1,3 +1,9 @@
+export class UnreachableError extends Error {
+    constructor(msg) {
+        super(msg);
+        this.name = UnreachableError.name;
+    }
+}
 // An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
 // Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
 export class UnbufferredChannel {
@@ -19,15 +25,16 @@ export class UnbufferredChannel {
         }
         // if no pop action awaiting
         if (this.popActions.length === 0) {
-            return new Promise((resolve) => {
-                this.putActions.push({ resolver: resolve, ele });
+            // @ts-ignore
+            return new Promise((resolve, reject) => {
+                this.putActions.push({ resolve, reject, ele });
             });
         }
         else {
             return new Promise((resolve) => {
                 let onPop = this.popActions.shift();
                 if (onPop === undefined) {
-                    throw new Error('unreachable');
+                    throw new UnreachableError('should have a pending pop action');
                 }
                 onPop({ value: ele, done: false });
                 resolve();
@@ -63,9 +70,9 @@ export class UnbufferredChannel {
             return new Promise((resolve) => {
                 let putAction = this.putActions.shift();
                 if (putAction === undefined) {
-                    throw new Error('unreachable');
+                    throw new UnreachableError('should have a pending put action');
                 }
-                let { resolver, ele } = putAction;
+                let { resolve: resolver, ele } = putAction;
                 resolver();
                 resolve({ value: ele, done: false });
             });
@@ -88,9 +95,8 @@ export class UnbufferredChannel {
             resolve(i);
         }
         this.readyListener = [];
-        // A closed channel can never be put
         for (let pendingPutter of this.putActions) {
-            throw Error('unreachable');
+            pendingPutter.reject('A closed channel can never be put');
         }
         this._closed = true;
     }
@@ -151,4 +157,37 @@ export function sleep(ms) {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, ms);
     });
+}
+class Multicaster {
+    constructor(source) {
+        this.source = source;
+        this.listeners = [];
+        (async () => {
+            while (true) {
+                if (source.closed()) {
+                    for (let l of this.listeners) {
+                        console.log('xxx');
+                        l.close();
+                    }
+                    return;
+                }
+                let data = await source.pop();
+                for (let l of this.listeners) {
+                    if (l.closed()) {
+                        continue;
+                    }
+                    l.put(data);
+                }
+            }
+        })();
+    }
+    copy() {
+        let c = new UnbufferredChannel();
+        this.listeners.push(c);
+        // @ts-ignore
+        return c;
+    }
+}
+export function multi(c) {
+    return new Multicaster(c);
 }
