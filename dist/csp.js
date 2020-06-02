@@ -114,7 +114,11 @@ export async function select(channels, defaultCase) {
         return c.ready(i);
     });
     if (defaultCase) {
-        promises = promises.concat([Promise.resolve(promises.length)]);
+        promises = promises.concat([new Promise((resolve) => {
+                // Run it in the next tick of the event loop to prevent starvation.
+                // Otherwise, if used in an infinite loop, select might always go to the default case.
+                setImmediate(resolve, promises.length);
+            })]);
     }
     let i = await Promise.race(promises);
     if (defaultCase && i === promises.length - 1) {

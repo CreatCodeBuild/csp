@@ -4,7 +4,7 @@ init:
 	yarn install
 
 test:
-	$$(yarn bin)/mocha -r ts-node/register src/$(f)_test.ts
+	$$(yarn bin)/mocha -r ts-node/register src/$(f)_test.ts --timeout 200 --slow 10
 
 doc:
 	$$(yarn bin)/mocha -r ts-node/register src/csp_doc.ts

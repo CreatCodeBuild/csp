@@ -140,4 +140,25 @@ describe('select', async () => {
             new Error('2147483648 is out of signed int32 bound or is negative')
         )
     });
+
+    it('do not starve in an infinite loop', async () => {
+        let c = after(10);
+        let i = 0;
+        while(++i) {
+            let ret = await select(
+                [
+                    [c, async () => {
+                        return 'after';
+                    }]
+                ],
+                async () => {
+                    // console.log(i);
+                    return 'default';
+                }
+            )
+            if (ret === 'after') {
+                break;
+            }
+        }
+    });
 });
