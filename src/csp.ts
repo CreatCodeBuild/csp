@@ -224,7 +224,7 @@ export function sleep(ms: number) {
     })
 }
 
-class Multicaster<T> {
+export class Multicaster<T> {
     public listeners: UnbufferredChannel<T | undefined>[] = [];
     constructor(public source: Channel<T>) {
         (async () => {

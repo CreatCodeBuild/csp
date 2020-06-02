@@ -158,7 +158,7 @@ export function sleep(ms) {
         setTimeout(resolve, ms);
     });
 }
-class Multicaster {
+export class Multicaster {
     constructor(source) {
         this.source = source;
         this.listeners = [];

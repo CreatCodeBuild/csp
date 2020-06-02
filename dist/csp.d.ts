@@ -66,7 +66,7 @@ interface DefaultCase<T> {
 export declare function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2>;
 export declare function after(ms: number): Channel<number>;
 export declare function sleep(ms: number): Promise<unknown>;
-declare class Multicaster<T> {
+export declare class Multicaster<T> {
     source: Channel<T>;
     listeners: UnbufferredChannel<T | undefined>[];
     constructor(source: Channel<T>);

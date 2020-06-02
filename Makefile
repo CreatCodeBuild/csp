@@ -19,3 +19,6 @@ compile:
 
 git:
 	git config --global user.email $(email)
+
+gidpod:
+	gp env GIT_COMMITTER_EMAIL=$(email)
