@@ -117,7 +117,9 @@ export async function select(channels, defaultCase) {
         promises = promises.concat([new Promise((resolve) => {
                 // Run it in the next tick of the event loop to prevent starvation.
                 // Otherwise, if used in an infinite loop, select might always go to the default case.
-                setImmediate(resolve, promises.length);
+                setTimeout(() => {
+                    resolve(promises.length - 1);
+                }, 0);
             })]);
     }
     let i = await Promise.race(promises);
