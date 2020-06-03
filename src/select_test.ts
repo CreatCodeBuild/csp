@@ -92,6 +92,24 @@ describe('select on read/receive/pop operation', async () => {
         equal('sec1', x)
     })
 
+    xit("fair selections --> no starvation", async () => {
+        // Currently does not support, but
+        // Is this even a good design decision?
+        let unblock = chan<null>();
+        unblock.close()
+        let sec1 = chan<null>();
+        sec1.put(null);
+        while (1) {
+            let x = await select([
+                [unblock, async function () { return 'unblock' }],
+                [sec1, async function () { return 'sec1' }],
+            ])
+            if ('sec1' === x) { // should eventually get picked
+                break;
+            }
+        }
+    })
+
     it('has default case', async () => {
         let unblock = chan<null>();
         equal('default', await select(
@@ -144,7 +162,7 @@ describe('select on read/receive/pop operation', async () => {
     it('do not starve in an infinite loop', async () => {
         let c = after(10);
         let i = 0;
-        while(++i) {
+        while (++i) {
             let ret = await select(
                 [
                     [c, async () => {

@@ -4,7 +4,7 @@
         "target": "es2018",
         "strict": true,
         "declaration": true,
-        "outDir": "dist/commonjs",
+        "outDir": "dist",
         "rootDir": "src"
     },
     "exclude": [
