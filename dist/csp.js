@@ -25,7 +25,6 @@ export class UnbufferredChannel {
         }
         // if no pop action awaiting
         if (this.popActions.length === 0) {
-            // @ts-ignore
             return new Promise((resolve, reject) => {
                 this.putActions.push({ resolve, reject, ele });
             });
@@ -43,13 +42,13 @@ export class UnbufferredChannel {
     }
     // checks if a channel is ready to be read but dooes not read it
     // it returns only after the channel is ready
-    async ready(i) {
+    async ready() {
         if (this.putActions.length > 0 || this._closed) {
-            return i;
+            return this;
         }
         else {
             return new Promise((resolve) => {
-                this.readyListener.push({ resolve, i });
+                this.readyListener.push({ resolve, i: this });
             });
         }
     }
@@ -103,7 +102,6 @@ export class UnbufferredChannel {
     closed() {
         return this._closed;
     }
-    // @ts-ignore
     [Symbol.asyncIterator]() {
         return this;
     }
@@ -116,8 +114,9 @@ export function chan() {
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
 export async function select(channels, defaultCase) {
-    let promises = channels.map(([c, func], i) => {
-        return c.ready(i);
+    let promises = channels.map(async ([c, func], i) => {
+        await c.ready();
+        return i;
     });
     if (defaultCase) {
         promises = promises.concat([new Promise((resolve) => {
@@ -146,7 +145,6 @@ export function after(ms) {
         await c.put(ms); // todo: should it close or put?
     }
     f();
-    // @ts-ignore
     return c;
 }
 // A promised setTimeout.
@@ -184,7 +182,6 @@ export class Multicaster {
     copy() {
         let c = new UnbufferredChannel();
         this.listeners.push(c);
-        // @ts-ignore
         return c;
     }
 }

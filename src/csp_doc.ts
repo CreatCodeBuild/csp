@@ -28,7 +28,7 @@ describe("Concurrent Programming 101: in JavaScript", async () => {
     // Another unique and somewhat surprising behavior of channels is that
     // a channel blocks on sending until the other side begins to receive and
     // a channel blcosk on receiving until the other side begins to send.
-    
+
     // This allows 2 processes to coordinate works by using the same channel.
 
     /*
@@ -62,7 +62,7 @@ describe("Concurrent Programming 101: in JavaScript", async () => {
         Since task2 only loop 3 times, task1 wil only loop 3 times as well.
 
         Also notice that task2 sleeps 1 sec in each iteration so that task1's c.put() will be blocked for 1 sec as well.
-        */ 
+        */
         let c = chan<number>();
         let task1 = async () => {
             let i = 0;
@@ -86,5 +86,11 @@ describe("Concurrent Programming 101: in JavaScript", async () => {
 describe('Some unique or advanced usages of this particular module', async () => {
 
     // Indended Audience: Experienced Concurrent Programming Programmers.
+    it("2", async () => {
+        let c = chan<number>();
+        let p = c.put(1)
+        await c.pop();
+        await p;
+    });
 
 })

@@ -35,15 +35,10 @@ export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> { }
 // A SelectableChannel implements ready() method that will be used by select() function.
 // The signature of this method is subject to change.
 export interface SeletableChannel<T> extends PopChannel<T> {
-    ready(i: number): Promise<number>
+    ready(): Promise<SeletableChannel<T>>
 }
 
-// An iteratble channel can be used in "for await (let element of channel)" loop 
-export interface IterableChannel<T> extends PopChannel<T> {
-    [Symbol.asyncIterator]: AsyncIterator<T>
-}
-
-export interface Channel<T> extends SeletableChannel<T>, PutChannel<T>, IterableChannel<T> { }
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> { }
 
 interface PopperOnResolver<T> {
     (ele: { value: undefined, done: true } | { value: T, done: false }): void
@@ -55,7 +50,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
     private _closed: boolean = false;
     popActions: PopperOnResolver<T>[] = [];
     putActions: Array<{ resolve: Function, reject: Function, ele: T }> = [];
-    readyListener: { resolve: Function, i: number }[] = [];
+    readyListener: { resolve: Function, i: UnbufferredChannel<T> }[] = [];
 
     put(ele: T): Promise<void> {
         if (this._closed) {
@@ -71,7 +66,6 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
 
         // if no pop action awaiting
         if (this.popActions.length === 0) {
-            // @ts-ignore
             return new Promise((resolve, reject) => {
                 this.putActions.push({ resolve, reject, ele });
             })
@@ -90,12 +84,12 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
 
     // checks if a channel is ready to be read but dooes not read it
     // it returns only after the channel is ready
-    async ready(i: number): Promise<number> {
+    async ready(): Promise<UnbufferredChannel<T>> {
         if (this.putActions.length > 0 || this._closed) {
-            return i;
+            return this;
         } else {
             return new Promise((resolve) => {
-                this.readyListener.push({ resolve, i });
+                this.readyListener.push({ resolve, i: this });
             })
         }
     }
@@ -155,7 +149,6 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
         return this._closed;
     }
 
-    // @ts-ignore
     [Symbol.asyncIterator]() {
         return this;
     }
@@ -178,8 +171,9 @@ interface DefaultCase<T> {
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
 export async function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2> {
-    let promises: Promise<number>[] = channels.map(([c, func], i) => {
-        return c.ready(i);
+    let promises: Promise<number>[] = channels.map(async ([c, func], i) => {
+        await c.ready();
+        return i;
     })
     if (defaultCase) {
         promises = promises.concat([new Promise((resolve) => {
@@ -210,7 +204,6 @@ export function after(ms: number): Channel<number> {
         await c.put(ms);    // todo: should it close or put?
     }
     f();
-    // @ts-ignore
     return c;
 }
 
@@ -250,7 +243,6 @@ export class Multicaster<T> {
     copy(): Channel<T> {
         let c = new UnbufferredChannel<T | undefined>();
         this.listeners.push(c);
-        // @ts-ignore
         return c;
     }
 
