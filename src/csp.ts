@@ -11,21 +11,21 @@ interface base {
     // One might argue that if a IO like object implement this interface,
     // its close behavior might need to block.
     // If this situation is indeed encounterred. Please raise an issue on GitHub and let's discuss it.
-    close(): void
+    close(): void;
     // Check if this channel is closed.
-    closed(): boolean
+    closed(): boolean;
 }
 
 // One can only receive data from a PopChannel.
 export interface PopChannel<T> extends base {
     // Receive data from this channel.
-    pop(): Promise<T | undefined>
+    pop(): Promise<T | undefined>;
 }
 
 // One can only send data to a PutChannel.
 export interface PutChannel<T> extends base {
     // Send data to this channel.
-    put(ele: T): Promise<void>
+    put(ele: T): Promise<void>;
 }
 
 // Normally a channel can both pop/receive and be put/send data.
@@ -35,26 +35,27 @@ export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> { }
 // A SelectableChannel implements ready() method that will be used by select() function.
 // The signature of this method is subject to change.
 export interface SeletableChannel<T> extends PopChannel<T> {
-    ready(): Promise<SeletableChannel<T>>
+    ready(): Promise<SeletableChannel<T>>;
 }
 
-export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> { }
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T>, AsyncIterableIterator<T> { }
 
 interface PopperOnResolver<T> {
-    (ele: { value: undefined, done: true } | { value: T, done: false }): void
+    (ele: { value: undefined; done: true } | { value: T; done: false }): void;
 }
 
 // An unbufferred channel is a channel that has 0 buffer size which lets it blocks on pop() and put() methods.
 // Bufferred channel implementation will come later when you or I or we need it. GitHub Issues welcome.
-export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIterableIterator<T> {
+export class UnbufferredChannel<T>
+    implements Channel<T>, PutChannel<T>, AsyncIterableIterator<T> {
     private _closed: boolean = false;
     popActions: PopperOnResolver<T>[] = [];
-    putActions: Array<{ resolve: Function, reject: Function, ele: T }> = [];
-    readyListener: { resolve: Function, i: UnbufferredChannel<T> }[] = [];
+    putActions: Array<{ resolve: Function; reject: Function; ele: T }> = [];
+    readyListener: { resolve: Function; i: UnbufferredChannel<T> }[] = [];
 
     put(ele: T): Promise<void> {
         if (this._closed) {
-            throw new Error('can not put to a closed channel');
+            throw new Error("can not put to a closed channel");
         }
 
         if (this.readyListener.length > 0) {
@@ -68,18 +69,17 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
         if (this.popActions.length === 0) {
             return new Promise((resolve, reject) => {
                 this.putActions.push({ resolve, reject, ele });
-            })
+            });
         } else {
             return new Promise((resolve) => {
                 let onPop = this.popActions.shift();
                 if (onPop === undefined) {
-                    throw  new UnreachableError('should have a pending pop action');
+                    throw new UnreachableError("should have a pending pop action");
                 }
                 onPop({ value: ele, done: false });
                 resolve();
             });
         }
-
     }
 
     // checks if a channel is ready to be read but dooes not read it
@@ -90,7 +90,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
         } else {
             return new Promise((resolve) => {
                 this.readyListener.push({ resolve, i: this });
-            })
+            });
         }
     }
 
@@ -99,7 +99,9 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
         return next.value;
     }
 
-    next(): Promise<{ value: T, done: false } | { value: undefined, done: true }> {
+    next(): Promise<
+        { value: T; done: false } | { value: undefined; done: true }
+    > {
         if (this._closed) {
             return Promise.resolve({ value: undefined, done: true });
         }
@@ -112,7 +114,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
             return new Promise((resolve) => {
                 let putAction = this.putActions.shift();
                 if (putAction === undefined) {
-                    throw new UnreachableError('should have a pending put action');
+                    throw new UnreachableError("should have a pending put action");
                 }
                 let { resolve: resolver, ele } = putAction;
                 resolver();
@@ -126,7 +128,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
     // close a closed channel throws an error
     async close(): Promise<void> {
         if (this._closed) {
-            throw Error('can not close a channel twice');
+            throw Error("can not close a channel twice");
         }
         // A closed channel always pops { value: undefined, done: true }
         for (let pendingPopper of this.popActions) {
@@ -140,7 +142,7 @@ export class UnbufferredChannel<T> implements Channel<T>, PutChannel<T>, AsyncIt
         this.readyListener = [];
 
         for (let pendingPutter of this.putActions) {
-            pendingPutter.reject('A closed channel can never be put');
+            pendingPutter.reject("A closed channel can never be put");
         }
         this._closed = true;
     }
@@ -160,29 +162,34 @@ export function chan<T>() {
 }
 
 interface onSelect<T, R> {
-    (ele: T | undefined): Promise<R>
+    (ele: T | undefined): Promise<R>;
 }
 
 interface DefaultCase<T> {
-    (): Promise<T>
+    (): Promise<T>;
 }
 
 // select() is modelled after Go's select statement ( https://tour.golang.org/concurrency/5 )
 // and does the same thing and should have identical behavior.
 // https://stackoverflow.com/questions/37021194/how-are-golang-select-statements-implemented
-export async function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2> {
+export async function select<T, R1, R2>(
+    channels: [SeletableChannel<T>, onSelect<T, R1>][],
+    defaultCase?: DefaultCase<R2>
+): Promise<R1 | R2> {
     let promises: Promise<number>[] = channels.map(async ([c, func], i) => {
         await c.ready();
         return i;
-    })
+    });
     if (defaultCase) {
-        promises = promises.concat([new Promise((resolve) => {
-            // Run it in the next tick of the event loop to prevent starvation.
-            // Otherwise, if used in an infinite loop, select might always go to the default case.
-            setTimeout(() => {
-                resolve(promises.length - 1)
-            }, 0);
-        })]);
+        promises = promises.concat([
+            new Promise((resolve) => {
+                // Run it in the next tick of the event loop to prevent starvation.
+                // Otherwise, if used in an infinite loop, select might always go to the default case.
+                setTimeout(() => {
+                    resolve(promises.length - 1);
+                }, 0);
+            }),
+        ]);
     }
     let i = await Promise.race(promises);
     if (defaultCase && i === promises.length - 1) {
@@ -196,12 +203,12 @@ const MAX_INT_32 = Math.pow(2, 32) / 2 - 1;
 
 export function after(ms: number): Channel<number> {
     if (0 > ms || ms > MAX_INT_32) {
-        throw new Error(`${ms} is out of signed int32 bound or is negative`)
+        throw new Error(`${ms} is out of signed int32 bound or is negative`);
     }
     let c = new UnbufferredChannel<number>();
     async function f() {
         await sleep(ms);
-        await c.put(ms);    // todo: should it close or put?
+        await c.put(ms); // todo: should it close or put?
     }
     f();
     return c;
@@ -210,11 +217,11 @@ export function after(ms: number): Channel<number> {
 // A promised setTimeout.
 export function sleep(ms: number) {
     if (0 > ms || ms > MAX_INT_32) {
-        throw Error(`${ms} is out of signed int32 bound or is negative`)
+        throw Error(`${ms} is out of signed int32 bound or is negative`);
     }
     return new Promise((resolve, reject) => {
-        setTimeout(resolve, ms)
-    })
+        setTimeout(resolve, ms);
+    });
 }
 
 export class Multicaster<T> {
@@ -224,7 +231,7 @@ export class Multicaster<T> {
             while (true) {
                 if (source.closed()) {
                     for (let l of this.listeners) {
-                        console.log('xxx');
+                        console.log("xxx");
                         l.close();
                     }
                     return;
@@ -240,12 +247,11 @@ export class Multicaster<T> {
         })();
     }
 
-    copy(): Channel<T> {
+    copy(): Channel<T | undefined> {
         let c = new UnbufferredChannel<T | undefined>();
         this.listeners.push(c);
         return c;
     }
-
 }
 
 export function multi<T>(c: Channel<T>): Multicaster<T> {
