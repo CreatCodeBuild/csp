@@ -16,7 +16,7 @@ export interface BaseChannel<T> extends PopChannel<T>, PutChannel<T> {
 export interface SeletableChannel<T> extends PopChannel<T> {
     ready(): Promise<SeletableChannel<T>>;
 }
-export interface Channel<T> extends SeletableChannel<T>, PutChannel<T> {
+export interface Channel<T> extends SeletableChannel<T>, PutChannel<T>, AsyncIterableIterator<T> {
 }
 interface PopperOnResolver<T> {
     (ele: {
@@ -60,14 +60,14 @@ interface onSelect<T, R> {
 interface DefaultCase<T> {
     (): Promise<T>;
 }
-export declare function select<T, R1, R2>(channels: [SeletableChannel<T>, onSelect<T, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2>;
+export declare function select<R1, R2>(channels: [SeletableChannel<any>, onSelect<any, R1>][], defaultCase?: DefaultCase<R2>): Promise<R1 | R2>;
 export declare function after(ms: number): Channel<number>;
 export declare function sleep(ms: number): Promise<unknown>;
 export declare class Multicaster<T> {
     source: Channel<T>;
     listeners: UnbufferredChannel<T | undefined>[];
     constructor(source: Channel<T>);
-    copy(): Channel<T>;
+    copy(): Channel<T | undefined>;
 }
 export declare function multi<T>(c: Channel<T>): Multicaster<T>;
 export {};

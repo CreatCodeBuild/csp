@@ -15,7 +15,7 @@ export class UnbufferredChannel {
     }
     put(ele) {
         if (this._closed) {
-            throw new Error('can not put to a closed channel');
+            throw new Error("can not put to a closed channel");
         }
         if (this.readyListener.length > 0) {
             for (let { resolve, i } of this.readyListener) {
@@ -33,7 +33,7 @@ export class UnbufferredChannel {
             return new Promise((resolve) => {
                 let onPop = this.popActions.shift();
                 if (onPop === undefined) {
-                    throw new UnreachableError('should have a pending pop action');
+                    throw new UnreachableError("should have a pending pop action");
                 }
                 onPop({ value: ele, done: false });
                 resolve();
@@ -69,7 +69,7 @@ export class UnbufferredChannel {
             return new Promise((resolve) => {
                 let putAction = this.putActions.shift();
                 if (putAction === undefined) {
-                    throw new UnreachableError('should have a pending put action');
+                    throw new UnreachableError("should have a pending put action");
                 }
                 let { resolve: resolver, ele } = putAction;
                 resolver();
@@ -82,7 +82,7 @@ export class UnbufferredChannel {
     // close a closed channel throws an error
     async close() {
         if (this._closed) {
-            throw Error('can not close a channel twice');
+            throw Error("can not close a channel twice");
         }
         // A closed channel always pops { value: undefined, done: true }
         for (let pendingPopper of this.popActions) {
@@ -95,7 +95,7 @@ export class UnbufferredChannel {
         }
         this.readyListener = [];
         for (let pendingPutter of this.putActions) {
-            pendingPutter.reject('A closed channel can never be put');
+            pendingPutter.reject("A closed channel can never be put");
         }
         this._closed = true;
     }
@@ -119,13 +119,15 @@ export async function select(channels, defaultCase) {
         return i;
     });
     if (defaultCase) {
-        promises = promises.concat([new Promise((resolve) => {
+        promises = promises.concat([
+            new Promise((resolve) => {
                 // Run it in the next tick of the event loop to prevent starvation.
                 // Otherwise, if used in an infinite loop, select might always go to the default case.
                 setTimeout(() => {
                     resolve(promises.length - 1);
                 }, 0);
-            })]);
+            }),
+        ]);
     }
     let i = await Promise.race(promises);
     if (defaultCase && i === promises.length - 1) {
@@ -164,7 +166,6 @@ export class Multicaster {
             while (true) {
                 if (source.closed()) {
                     for (let l of this.listeners) {
-                        console.log('xxx');
                         l.close();
                     }
                     return;

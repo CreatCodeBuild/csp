@@ -231,7 +231,6 @@ export class Multicaster<T> {
             while (true) {
                 if (source.closed()) {
                     for (let l of this.listeners) {
-                        console.log("xxx");
                         l.close();
                     }
                     return;

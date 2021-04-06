@@ -16,6 +16,11 @@ compile:
 	# $$(yarn bin)/tsc							# Node Distribution
 	$$(yarn bin)/tsc --module es6 --outDir dist	# Deno Distribution
 	cp src/csp.ts dist/csp.ts
+	cp package.json dist/package.json
+	cp readme.md dist/readme.md
+
+publish: compile
+	npm publish dist --access public
 
 git:
 	git config --global user.email $(email)
