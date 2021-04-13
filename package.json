@@ -1,6 +1,7 @@
 {
   "name": "@creatcodebuild/csp",
-  "version": "0.0.3",
+  "main": "node/csp.js",
+  "version": "0.0.4",
   "devDependencies": {
     "@types/mocha": "^7.0.2",
     "@types/node": "^14.0.1",
