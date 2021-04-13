@@ -13,8 +13,8 @@ build: test compile
 	
 compile:
 	rm -rf dist
-	# $$(yarn bin)/tsc							# Node Distribution
-	$$(yarn bin)/tsc --module es6 --outDir dist	# Deno Distribution
+	$$(yarn bin)/tsc --outDir dist/node			# Node             Distribution
+	$$(yarn bin)/tsc --module es6 --outDir dist	# Deno / ES Module Distribution
 	cp package.json dist/package.json
 	cp readme.md dist/readme.md
 
